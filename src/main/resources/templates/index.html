@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Comparte tu Receta - Encuentra las mejores recetas populares y más recientes.">
+    <title>Página de Inicio</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<header>
+    <h1 th:text="${isAuthenticated} ? 'Bienvenido, ' + ${username} : 'Bienvenidos a Comparte tu Receta'">Bienvenidos a Comparte tu Receta</h1>
+    <nav>
+        <a th:href="@{/buscar}">Buscar Recetas</a>
+        <a th:href="@{/login}" th:if="${!isAuthenticated}">Iniciar Sesión</a>
+        <a th:href="@{/logout}" th:if="${isAuthenticated}">Cerrar Sesión</a>
+    </nav>
+</header>
+
+<div class="container">
+    <section class="main-content">
+        <h2>Recetas Populares</h2>
+        <div th:if="${#lists.isEmpty(recetasPopulares)}">
+            <p>No hay recetas populares disponibles en este momento.</p>
+        </div>
+        <div th:each="receta : ${recetasPopulares}" th:unless="${#lists.isEmpty(recetasPopulares)}">
+            <div class="receta">
+                <img th:src="${receta.fotografiaUrl}" alt="Imagen de la receta" class="receta-imagen" />
+                <h3 th:text="${receta.nombre}">Nombre de la receta</h3>
+                <p>Tipo de Cocina: <span th:text="${receta.tipoCocina}"></span></p>
+                <p>Ingredientes: <span th:text="${receta.ingredientes}"></span></p>
+                <p>Dificultad: <span th:text="${receta.dificultad}"></span></p>
+                <a th:href="@{/receta/{id}(id=${receta.id})}">Ver detalles</a>
+            </div>
+        </div>
+    </section>
+
+    <aside class="sidebar">
+        <h2>Patrocinadores</h2>
+        <div th:if="${#lists.isEmpty(banners)}">
+            <p>No hay banners disponibles en este momento.</p>
+        </div>
+        <div th:each="banner : ${banners}" th:unless="${#lists.isEmpty(banners)}">
+            <div class="banner">
+                <a th:href="${banner.linkWebsite}" target="_blank">
+                    <img th:src="${banner.urlImagen}" th:alt="${banner.mensaje}" />
+                    <p th:text="${banner.mensaje}"></p>
+                </a>
+            </div>
+        </div>
+    </aside>
+</div>
+</body>
+</html>
