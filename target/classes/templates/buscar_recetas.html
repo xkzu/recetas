@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Buscar Recetas</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<header>
+    <h1>Buscar Recetas</h1>
+</header>
+<section>
+    <form action="/buscar" method="get">
+        <input type="text" name="nombre" placeholder="Nombre de la receta">
+        <input type="text" name="tipoCocina" placeholder="Tipo de Cocina">
+        <input type="text" name="ingredientes" placeholder="Ingredientes">
+        <input type="text" name="paisOrigen" placeholder="País de origen">
+        <input type="text" name="dificultad" placeholder="Dificultad">
+        <button type="submit">Buscar</button>
+    </form>
+
+    <!-- Botón para volver al inicio -->
+    <div style="margin-top: 20px;">
+        <a href="/inicio" class="button">Volver al Inicio</a>
+    </div>
+</section>
+
+<section>
+    <h2>Resultados de la Búsqueda</h2>
+    <div th:if="${recetas.empty}">
+        <p>No se encontraron recetas para los criterios de búsqueda.</p>
+    </div>
+    <div th:each="receta : ${recetas}">
+        <div class="receta">
+            <img th:src="${receta.fotografiaUrl}" alt="Imagen de la receta" class="receta-imagen" />
+            <h3 th:text="${receta.nombre}">Nombre de la receta</h3>
+            <p>Tipo de Cocina: <span th:text="${receta.tipoCocina}"></span></p>
+            <p>Ingredientes: <span th:text="${receta.ingredientes}"></span></p>
+            <p>País de Origen: <span th:text="${receta.paisOrigen}"></span></p>
+            <p>Dificultad: <span th:text="${receta.dificultad}"></span></p>
+            <a th:href="@{/receta/{id}(id=${receta.id})}">Ver detalles</a>
+        </div>
+    </div>
+</section>
+</body>
+</html>

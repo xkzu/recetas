@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Recetas Populares</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<h1>Recetas Populares</h1>
+<div th:each="receta : ${recetasPopulares}">
+    <div>
+        <h2 th:text="${receta.nombre}">Nombre de la receta</h2>
+        <p>Tipo de Cocina: <span th:text="${receta.tipoCocina}"></span></p>
+        <p>Ingredientes: <span th:text="${receta.ingredientes}"></span></p>
+        <p>País de Origen: <span th:text="${receta.paisOrigen}"></span></p>
+        <p>Dificultad: <span th:text="${receta.dificultad}"></span></p>
+        <p>Popularidad: <span th:text="${receta.popularidad}"></span></p>
+        <a th:href="@{/receta/{id}(id=${receta.id})}">Ver detalles</a>
+    </div>
+</div>
+</body>
+</html>
