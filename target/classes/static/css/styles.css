@@ -1,0 +1,148 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3 {
+    color: #333;
+}
+
+header {
+    background: #007bff;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+header nav {
+    margin-top: 10px;
+}
+
+header nav a {
+    color: #fff;
+    margin: 0 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    display: flex;
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    gap: 20px;
+}
+
+.main-content {
+    flex: 3;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.receta {
+    margin: 15px 0;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.receta h3 {
+    margin-top: 0;
+}
+
+.receta p {
+    color: #666;
+}
+
+.receta a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.receta a:hover {
+    text-decoration: underline;
+}
+
+.sidebar {
+    flex: 1;
+    max-width: 250px;
+    text-align: center;
+}
+
+.sidebar h2 {
+    margin-top: 0;
+}
+
+.banner {
+    background: #fff;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.banner img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.banner p {
+    font-size: 0.9em;
+    color: #333;
+    margin-top: 10px;
+}
+
+.banners a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.banners a:hover {
+    text-decoration: underline;
+}
+
+button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.receta-imagen {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+
