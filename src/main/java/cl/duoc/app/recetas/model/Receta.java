@@ -34,4 +34,6 @@ public class Receta {
     private String fotografiaUrl;
 
     private LocalDateTime fechaCreacion;
+
+    private Long idUsuario;
 }
