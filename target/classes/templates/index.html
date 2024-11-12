@@ -14,6 +14,7 @@
         <a th:href="@{/buscar}">Buscar Recetas</a>
         <a th:href="@{/login}" th:if="${!isAuthenticated}">Iniciar Sesión</a>
         <a th:href="@{/logout}" th:if="${isAuthenticated}">Cerrar Sesión</a>
+        <a th:href="@{/recetas/nueva}" th:if="${isAuthenticated}" class="btn-agregar-receta">Nueva receta</a>
     </nav>
 </header>
 
