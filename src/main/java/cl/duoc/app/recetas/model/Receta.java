@@ -33,6 +33,8 @@ public class Receta {
 
     private String fotografiaUrl;
 
+    private String video;
+
     private LocalDateTime fechaCreacion;
 
     private Long idUsuario;
