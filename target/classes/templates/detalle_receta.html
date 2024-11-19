@@ -4,25 +4,54 @@
     <meta charset="UTF-8">
     <title>Detalles de la Receta</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <script type="text/javascript">
+        function generarEnlaceCompartir() {
+            // Obtener el valor del atributo data-url
+            const enlaceCampo = document.getElementById("enlaceCompartir");
+            const url = enlaceCampo.getAttribute("data-url");
+            // Asignar el enlace generado al campo de texto
+            enlaceCampo.value = "Comparte la receta: " + url;
+        }
+    </script>
 </head>
 <body>
 <header>
     <h1 th:text="${receta.nombre}">Nombre de la Receta</h1>
 </header>
-<section>
-    <img th:src="${receta.fotografiaUrl}" alt="Imagen de la receta" />
-    <p><strong>Tipo de Cocina:</strong> <span th:text="${receta.tipoCocina}"></span></p>
-    <p><strong>Ingredientes:</strong> <span th:text="${receta.ingredientes}"></span></p>
-    <p><strong>País de Origen:</strong> <span th:text="${receta.paisOrigen}"></span></p>
-    <p><strong>Dificultad:</strong> <span th:text="${receta.dificultad}"></span></p>
-    <p><strong>Tiempo de Cocción:</strong> <span th:text="${receta.tiempoCoccion}"></span> minutos</p>
-    <p><strong>Porciones:</strong> <span th:text="${receta.porciones}"></span></p>
-    <p><strong>Instrucciones de Preparación:</strong></p>
-    <p th:text="${receta.instruccionesPreparacion}">Instrucciones detalladas...</p>
-    <p><strong>Fecha de Creación:</strong> <span th:text="${#temporals.format(receta.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></span></p>
+
+<section class="container">
+    <div class="sidebar">
+        <img class="receta-imagen" th:src="${receta.fotografiaUrl}" alt="Imagen de la receta">
+    </div>
+    <div class="main-content">
+        <div th:if="${receta.video != null && !receta.video.isEmpty()}">
+            <iframe th:src="${'https://www.youtube.com/embed/' + receta.video + '?autoplay=1&controls=0'}"
+                    width="560" height="315"
+                    frameborder="0" allowfullscreen>
+            </iframe>
+        </div>
+
+        <p><strong>Tipo de Cocina:</strong> <span th:text="${receta.tipoCocina}"></span></p>
+        <p><strong>Ingredientes:</strong> <span th:text="${receta.ingredientes}"></span></p>
+        <p><strong>País de Origen:</strong> <span th:text="${receta.paisOrigen}"></span></p>
+        <p><strong>Dificultad:</strong> <span th:text="${receta.dificultad}"></span></p>
+        <p><strong>Tiempo de Cocción:</strong> <span th:text="${receta.tiempoCoccion}"></span> minutos</p>
+        <p><strong>Porciones:</strong> <span th:text="${receta.porciones}"></span></p>
+        <p><strong>Instrucciones de Preparación:</strong></p>
+        <p th:text="${receta.instruccionesPreparacion}">Instrucciones detalladas...</p>
+        <p><strong>Fecha de Creación:</strong> <span th:text="${#temporals.format(receta.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></span></p>
+
+        <div>
+            <p><strong>Enlace para compartir:</strong></p>
+            <button type="button" onclick="generarEnlaceCompartir()">Generar Enlace</button>
+            <input type="text" id="enlaceCompartir" th:attr="data-url=${frontendUrl}" readonly style="width: 100%; margin-top: 10px;" />
+        </div>
+    </div>
 </section>
+
 <footer>
     <a href="/inicio">Volver al Inicio</a>
 </footer>
+
 </body>
 </html>
