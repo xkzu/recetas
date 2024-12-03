@@ -1,6 +1,7 @@
 package cl.duoc.app.recetas.controller;
 
 import cl.duoc.app.recetas.config.UrlConfiguration;
+import cl.duoc.app.recetas.model.Comentario;
 import cl.duoc.app.recetas.model.Receta;
 import cl.duoc.app.recetas.model.Banner;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class RecetaController {
                     null,
                     new ParameterizedTypeReference<List<Receta>>() {}
             );
-            log.info("Recetas populadas: {}", popularesResponse.getBody());
+            log.info("Recetas populares: {}", popularesResponse.getBody());
 
             ResponseEntity<List<Receta>> recientesResponse = restTemplate.exchange(
                     backendRecientesUrl,
@@ -109,12 +110,15 @@ public class RecetaController {
 
         String nombreUsuarioSession = (String) session.getAttribute(USERNAME);
         boolean isAuthenticated = (nombreUsuarioSession != null);
+        Boolean rol = (Boolean) session.getAttribute("rol");  // Cambiado a Boolean (la clase envolvente)
 
         model.addAttribute("isAuthenticated", isAuthenticated);
         model.addAttribute(USERNAME, nombreUsuarioSession);
+        model.addAttribute("rol", rol != null ? rol : false);
 
         return "index";
     }
+
 
     @GetMapping("/login")
     public String login() {
@@ -145,9 +149,15 @@ public class RecetaController {
             Map<String, Object> usuario = (Map<String, Object>) response.getBody().get("usuario");
             idUsuario = (Integer) usuario.get("id");
             String nombreUsuario = (String) usuario.get("nombreUsuario");
+            boolean rol = (boolean) usuario.get("rol");
+
+            log.info("Recetas login rol: {}", rol);
 
             session.setAttribute(TOKEN, token);
             session.setAttribute(USERNAME, nombreUsuario);
+            session.setAttribute("rol", rol);
+
+            model.addAttribute("rol", rol);
 
             return "redirect:/inicio";
 
@@ -245,40 +255,33 @@ public class RecetaController {
         }
 
         log.info("session: {}", session);
-        // Recupera el token de la sesión
         String token = (String) session.getAttribute(TOKEN);
         log.info("Recetas registrar token: {}", token);
 
         if (token == null || token.isEmpty()) {
-            return REDIRECT_LOGIN; // Redirige al login si el token no está presente
+            return REDIRECT_LOGIN;
         }
 
-        // Recupera el usuario de la sesión y extrae el idUsuario
         String usuario = (String) session.getAttribute(USERNAME);
         log.info("Recetas registrar username: {}", usuario);
 
         if (usuario == null || usuario.isEmpty()) {
-            return REDIRECT_LOGIN; // Redirige al login si el usuario no está presente
+            return REDIRECT_LOGIN;
         }
 
-        // Asigna el idUsuario a la receta
         nuevaReceta.setIdUsuario((long) idUsuario);
 
-        // URL del backend para registrar la receta
         backendUrl = backendMainUrl + "/recetas/register";
         log.info("Recetas registrar url: {}", backendUrl);
 
-        // Configura los encabezados HTTP con el token
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(token);
 
-        // Crea la entidad de solicitud con la receta y los encabezados
         HttpEntity<Receta> request = new HttpEntity<>(nuevaReceta, headers);
         log.info("Recetas registrar request: {}", request);
 
         try {
-            // Llama al backend para registrar la receta
             ResponseEntity<Receta> response = restTemplate.exchange(
                     backendUrl,
                     HttpMethod.POST,
@@ -287,32 +290,26 @@ public class RecetaController {
             );
             log.info("Recetas registrar response: {}", response);
 
-            // Maneja respuestas exitosas
             if (response.getStatusCode().is2xxSuccessful()) {
                 return "redirect:/inicio";
             }
-            // Redirige al login si la respuesta es no autorizada
             if (response.getStatusCode() == HttpStatus.UNAUTHORIZED || response.getStatusCode() == HttpStatus.FORBIDDEN) {
                 return REDIRECT_LOGIN;
             }
 
-            // Manejo de errores generales de respuesta
             model.addAttribute(ERROR, "Error al registrar la receta. Respuesta del servidor: " + response.getStatusCode());
             return CREAR_RECETA;
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            // Manejo específico de errores del cliente o servidor, incluyendo redirección al login si es necesario
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 return REDIRECT_LOGIN;
             }
             model.addAttribute(ERROR, "Error al registrar la receta. Respuesta del servidor: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
             return CREAR_RECETA;
         } catch (RestClientException e) {
-            // Manejo de errores de conexión
             model.addAttribute(ERROR, "Error de conexión. Intente nuevamente.");
             return CREAR_RECETA;
         } catch (Exception e) {
-            // Manejo de excepciones generales
             model.addAttribute(ERROR, "Ocurrió un error inesperado. Intente nuevamente.");
             return CREAR_RECETA;
         }
@@ -328,6 +325,94 @@ public class RecetaController {
         }
         return CREAR_RECETA;
     }
+
+    @GetMapping("/comentarios")
+    public String mostrarComentarios(HttpSession session, Model model) {
+        String token = (String) session.getAttribute(TOKEN);
+        if (token == null || token.isEmpty()) {
+            return REDIRECT_LOGIN;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        backendUrl = backendMainUrl + "/comentario/all";
+        log.info("Comentarios ver url: " + backendUrl);
+
+        try {
+            ResponseEntity<List<Comentario>> response = restTemplate.exchange(
+                    backendUrl,
+                    HttpMethod.GET,
+                    request,
+                    new ParameterizedTypeReference<List<Comentario>>() {}
+            );
+            model.addAttribute("comentarios", response.getBody());
+        } catch (RestClientException e) {
+            model.addAttribute("comentarios", Collections.emptyList());
+            model.addAttribute(ERROR, "No se pudieron cargar los comentarios. Intente nuevamente más tarde.");
+        }
+
+        String nombreUsuarioSession = (String) session.getAttribute(USERNAME);
+        boolean isAuthenticated = (nombreUsuarioSession != null);
+
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("username", nombreUsuarioSession);
+
+        return "comentarios";
+    }
+
+    @PostMapping("/comentarios/aprobar/{id}")
+    public String aprobarComentario(@PathVariable Long id, HttpSession session, Model model) {
+        String token = (String) session.getAttribute(TOKEN);
+
+        if (token == null || token.isEmpty()) {
+            return REDIRECT_LOGIN;
+        }
+
+        Boolean rol = (Boolean) session.getAttribute("rol");
+        if (rol == null || !rol) {
+            model.addAttribute(ERROR, "No tienes permisos para aprobar comentarios.");
+            return "redirect:/comentarios";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        String backendUrl = backendMainUrl + "/comentarios/aprobar/" + id;
+
+        try {
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    backendUrl,
+                    HttpMethod.PUT,
+                    request,
+                    Void.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Comentario aprobado con éxito, ID: {}", id);
+            } else {
+                log.error("Error al aprobar el comentario, status: {}", response.getStatusCode());
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                log.error("Acceso prohibido al aprobar el comentario. Revisa los permisos del token o el rol del usuario.", e);
+                model.addAttribute(ERROR, "No tienes permisos para aprobar este comentario.");
+            } else {
+                log.error("Error del cliente al aprobar el comentario, status: {}", e.getStatusCode(), e);
+                model.addAttribute(ERROR, "Ocurrió un error al intentar aprobar el comentario.");
+            }
+        } catch (Exception e) {
+            log.error("Error al aprobar el comentario, ID: {}", id, e);
+            model.addAttribute(ERROR, "Ocurrió un error inesperado. Intenta nuevamente.");
+        }
+
+        return "redirect:/comentarios";
+    }
+
 
     private String encodeParam(String param) {
         return param.replace(" ", "%20");
