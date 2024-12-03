@@ -17,6 +17,7 @@ public class SecurityConfig {
                         .requestMatchers("/recetas/nueva").permitAll()
                         .requestMatchers("/inicio", "/buscar", "/login", "/css/**", "/images/**", "/usuario/login").permitAll()
                         .requestMatchers("/receta/**").permitAll()
+                        .requestMatchers("/comentarios", "/comentarios/aprobar/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf().disable()
@@ -28,5 +29,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
 }
