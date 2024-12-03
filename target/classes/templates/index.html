@@ -15,6 +15,7 @@
         <a th:href="@{/login}" th:if="${!isAuthenticated}">Iniciar Sesión</a>
         <a th:href="@{/logout}" th:if="${isAuthenticated}">Cerrar Sesión</a>
         <a th:href="@{/recetas/nueva}" th:if="${isAuthenticated}" class="btn-agregar-receta">Nueva receta</a>
+        <a th:href="@{/comentarios}" th:if="${isAuthenticated} and ${rol}" class="btn-agregar-receta">Aprobar comentarios</a>
     </nav>
 </header>
 
