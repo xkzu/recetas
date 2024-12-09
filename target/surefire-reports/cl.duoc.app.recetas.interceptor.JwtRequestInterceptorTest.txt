@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: cl.duoc.app.recetas.interceptor.JwtRequestInterceptorTest
 -------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s -- in cl.duoc.app.recetas.interceptor.JwtRequestInterceptorTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s -- in cl.duoc.app.recetas.interceptor.JwtRequestInterceptorTest
