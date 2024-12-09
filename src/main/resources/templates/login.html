@@ -4,32 +4,13 @@
     <meta charset="UTF-8">
     <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="/css/styles.css" />
-    <script>
-        async function submitLogin(event) {
-            event.preventDefault();
-            const nombre = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, password })
-            });
-
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                document.getElementById("error").innerText = "Nombre de usuario o contraseña incorrectos";
-            }
-        }
-    </script>
 </head>
 <body>
 <header>
     <h1>Iniciar Sesión</h1>
 </header>
 <section>
-    <form onsubmit="submitLogin(event)">
+    <form th:action="@{/login}" method="post">
         <div>
             <label for="username">Usuario:</label>
             <input type="text" id="username" name="username" required>
@@ -41,7 +22,7 @@
         <div>
             <button type="submit">Iniciar Sesión</button>
         </div>
-        <div id="error" style="color: red;"></div>
+        <div th:if="${error}" style="color: red;" th:text="${error}"></div>
     </form>
 </section>
 </body>
