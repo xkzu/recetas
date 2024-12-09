@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RecetaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">recetas</a> &gt; <a href="index.source.html" class="el_package">cl.duoc.app.recetas.controller</a> &gt; <span class="el_source">RecetaController.java</span></div><h1>RecetaController.java</h1><pre class="source lang-java linenums">package cl.duoc.app.recetas.controller;
+
+import cl.duoc.app.recetas.config.UrlConfiguration;
+import cl.duoc.app.recetas.model.Comentario;
+import cl.duoc.app.recetas.model.Receta;
+import cl.duoc.app.recetas.model.Banner;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import jakarta.servlet.http.HttpSession;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="fc" id="L36">@Slf4j</span>
+@Controller
+public class RecetaController {
+
+    private final RestTemplate restTemplate;
+
+    private final String backendMainUrl;
+
+    private final String frontendMainUrl;
+
+    private static final String ERROR = &quot;error&quot;;
+
+    private static final String USERNAME = &quot;username&quot;;
+
+    private static final String TOKEN = &quot;token&quot;;
+
+    private static final String REDIRECT_LOGIN = &quot;redirect:/login&quot;;
+
+    private static final String CREAR_RECETA = &quot;crear_receta&quot;;
+
+<span class="fc" id="L56">    private String backendUrl = null;</span>
+
+<span class="fc" id="L58">    private int idUsuario = 0;</span>
+
+    @Autowired
+<span class="fc" id="L61">    public RecetaController(RestTemplate restTemplate, UrlConfiguration urlConfiguration) {</span>
+<span class="fc" id="L62">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L63">        this.backendMainUrl = urlConfiguration.getBackendUrl();</span>
+<span class="fc" id="L64">        this.frontendMainUrl = urlConfiguration.getFrontendUrl();</span>
+<span class="fc" id="L65">    }</span>
+
+    @GetMapping(&quot;/logout&quot;)
+    public String logout(HttpSession session) {
+        // Invalida la sesión localmente
+<span class="fc" id="L70">        session.invalidate();</span>
+<span class="fc" id="L71">        log.info(&quot;Sesión cerrada exitosamente&quot;);</span>
+
+        // Redirigir al inicio después de cerrar sesión
+<span class="fc" id="L74">        return &quot;redirect:/inicio&quot;;</span>
+    }
+
+    @GetMapping(&quot;/inicio&quot;)
+    public String inicio(Model model, HttpSession session) {
+<span class="fc" id="L79">        String backendPopularesUrl = backendMainUrl + &quot;/recetas/populares/5&quot;;</span>
+<span class="fc" id="L80">        log.info(&quot;Backend populares url: &quot; + backendPopularesUrl);</span>
+
+<span class="fc" id="L82">        String backendRecientesUrl = backendMainUrl + &quot;/recetas/recientes/5&quot;;</span>
+<span class="fc" id="L83">        log.info(&quot;Backend recientes url: &quot; + backendRecientesUrl);</span>
+
+<span class="fc" id="L85">        String backendBannersUrl = backendMainUrl + &quot;/banners/all&quot;;</span>
+<span class="fc" id="L86">        log.info(&quot;Backend banners url: &quot; + backendBannersUrl);</span>
+
+        try {
+<span class="fc" id="L89">            ResponseEntity&lt;List&lt;Receta&gt;&gt; popularesResponse = restTemplate.exchange(</span>
+                    backendPopularesUrl,
+                    HttpMethod.GET,
+                    null,
+<span class="fc" id="L93">                    new ParameterizedTypeReference&lt;List&lt;Receta&gt;&gt;() {}</span>
+            );
+<span class="fc" id="L95">            log.info(&quot;Recetas populares: {}&quot;, popularesResponse);</span>
+
+<span class="fc" id="L97">            ResponseEntity&lt;List&lt;Receta&gt;&gt; recientesResponse = restTemplate.exchange(</span>
+                    backendRecientesUrl,
+                    HttpMethod.GET,
+                    null,
+<span class="fc" id="L101">                    new ParameterizedTypeReference&lt;List&lt;Receta&gt;&gt;() {}</span>
+            );
+<span class="fc" id="L103">            log.info(&quot;Recetas recientes: {}&quot;, recientesResponse);</span>
+
+<span class="fc" id="L105">            ResponseEntity&lt;List&lt;Banner&gt;&gt; bannersResponse = restTemplate.exchange(</span>
+                    backendBannersUrl,
+                    HttpMethod.GET,
+                    null,
+<span class="fc" id="L109">                    new ParameterizedTypeReference&lt;List&lt;Banner&gt;&gt;() {}</span>
+            );
+<span class="fc" id="L111">            log.info(&quot;Recetas banners: {}&quot;, bannersResponse);</span>
+
+<span class="fc" id="L113">            model.addAttribute(&quot;recetasPopulares&quot;, popularesResponse.getBody());</span>
+<span class="fc" id="L114">            model.addAttribute(&quot;recetasRecientes&quot;, recientesResponse.getBody());</span>
+<span class="fc" id="L115">            model.addAttribute(&quot;banners&quot;, bannersResponse.getBody());</span>
+<span class="fc" id="L116">        } catch (RestClientException e) {</span>
+<span class="fc" id="L117">            model.addAttribute(&quot;recetasPopulares&quot;, Collections.emptyList());</span>
+<span class="fc" id="L118">            model.addAttribute(&quot;recetasRecientes&quot;, Collections.emptyList());</span>
+<span class="fc" id="L119">            model.addAttribute(&quot;banners&quot;, Collections.emptyList());</span>
+<span class="fc" id="L120">            model.addAttribute(ERROR, &quot;No se pueden cargar algunos datos en este momento. Intente nuevamente más tarde.&quot;);</span>
+<span class="fc" id="L121">        }</span>
+
+<span class="fc" id="L123">        String nombreUsuarioSession = (String) session.getAttribute(USERNAME);</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        boolean isAuthenticated = (nombreUsuarioSession != null);</span>
+<span class="fc" id="L125">        Boolean rol = (Boolean) session.getAttribute(&quot;rol&quot;);  // Cambiado a Boolean (la clase envolvente)</span>
+
+<span class="fc" id="L127">        model.addAttribute(&quot;isAuthenticated&quot;, isAuthenticated);</span>
+<span class="fc" id="L128">        model.addAttribute(USERNAME, nombreUsuarioSession);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        model.addAttribute(&quot;rol&quot;, rol != null ? rol : false);</span>
+
+<span class="fc" id="L131">        return &quot;index&quot;;</span>
+    }
+
+
+    @GetMapping(&quot;/login&quot;)
+    public String login() {
+<span class="fc" id="L137">        return &quot;login&quot;;</span>
+    }
+
+    @PostMapping(&quot;/login&quot;)
+    public String loginPost(
+            @RequestParam String username,
+            @RequestParam String password,
+            Model model,
+            HttpSession session) {
+
+<span class="fc" id="L147">        log.info(&quot;Recetas login username: {}&quot;, username);</span>
+
+        // Construir las credenciales en un mapa
+<span class="fc" id="L150">        Map&lt;String, String&gt; credentials = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L151">        credentials.put(&quot;nombre&quot;, username);</span>
+<span class="fc" id="L152">        credentials.put(&quot;password&quot;, password);</span>
+
+<span class="fc" id="L154">        String loginUrl = backendMainUrl + &quot;/usuario/login&quot;;</span>
+<span class="fc" id="L155">        log.info(&quot;Recetas login url: {}&quot;, loginUrl);</span>
+
+<span class="fc" id="L157">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L158">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L159">        HttpEntity&lt;Map&lt;String, String&gt;&gt; request = new HttpEntity&lt;&gt;(credentials, headers);</span>
+
+<span class="fc" id="L161">        log.info(&quot;Recetas login request: {}&quot;, request);</span>
+
+        try {
+<span class="fc" id="L164">            ResponseEntity&lt;Map&gt; response = restTemplate.exchange(</span>
+                    loginUrl,
+                    HttpMethod.POST,
+                    request,
+                    Map.class
+            );
+
+<span class="fc" id="L171">            log.info(&quot;Recetas login response: {}&quot;, response);</span>
+
+            // Extraer información del token y usuario
+<span class="fc" id="L174">            String token = (String) response.getBody().get(TOKEN);</span>
+<span class="fc" id="L175">            Map&lt;String, Object&gt; usuario = (Map&lt;String, Object&gt;) response.getBody().get(&quot;usuario&quot;);</span>
+<span class="fc" id="L176">            idUsuario = (Integer) usuario.get(&quot;id&quot;);</span>
+<span class="fc" id="L177">            String nombreUsuario = (String) usuario.get(&quot;nombreUsuario&quot;);</span>
+<span class="fc" id="L178">            boolean rol = (boolean) usuario.get(&quot;rol&quot;);</span>
+
+<span class="fc" id="L180">            log.info(&quot;Recetas login rol: {}&quot;, rol);</span>
+
+            // Configurar sesión
+<span class="fc" id="L183">            session.setAttribute(TOKEN, token);</span>
+<span class="fc" id="L184">            session.setAttribute(USERNAME, nombreUsuario);</span>
+<span class="fc" id="L185">            session.setAttribute(&quot;rol&quot;, rol);</span>
+
+<span class="fc" id="L187">            model.addAttribute(&quot;rol&quot;, rol);</span>
+
+<span class="fc" id="L189">            return &quot;redirect:/inicio&quot;;</span>
+
+<span class="fc" id="L191">        } catch (RestClientException e) {</span>
+<span class="fc" id="L192">            model.addAttribute(ERROR, &quot;Usuario o contraseña incorrectos.&quot;);</span>
+<span class="fc" id="L193">            return &quot;login&quot;;</span>
+        }
+    }
+
+
+    @GetMapping(&quot;/receta/{id}&quot;)
+    public String verReceta(@PathVariable Long id, Model model, HttpSession session) {
+<span class="fc" id="L200">        String token = (String) session.getAttribute(TOKEN);</span>
+<span class="pc bpc" id="L201" title="1 of 4 branches missed.">        if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L202">            session.setAttribute(&quot;redirectAfterLogin&quot;, &quot;/receta/&quot; + id);</span>
+<span class="fc" id="L203">            return REDIRECT_LOGIN;</span>
+        }
+
+<span class="fc" id="L206">        backendUrl = backendMainUrl + &quot;/recetas/detalle/&quot; + id;</span>
+<span class="fc" id="L207">        log.info(&quot;Recetas ver url: &quot; + backendUrl);</span>
+
+<span class="fc" id="L209">        String frontendUrl = frontendMainUrl + &quot;/receta/&quot; + id;</span>
+
+<span class="fc" id="L211">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L212">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+
+<span class="fc" id="L214">        HttpEntity&lt;Void&gt; request = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L215">        log.info(&quot;Recetas ver request: {}&quot;, request);</span>
+
+        try {
+<span class="fc" id="L218">            ResponseEntity&lt;Receta&gt; response = restTemplate.exchange(</span>
+                    backendUrl,
+                    HttpMethod.GET,
+                    request,
+                    Receta.class
+            );
+<span class="fc" id="L224">            log.info(&quot;Recetas ver response: {}&quot;, response);</span>
+
+<span class="fc" id="L226">            model.addAttribute(&quot;receta&quot;, response.getBody());</span>
+<span class="fc" id="L227">            model.addAttribute(&quot;backendUrl&quot;, backendUrl);</span>
+<span class="fc" id="L228">            model.addAttribute(&quot;frontendUrl&quot;, frontendUrl);</span>
+<span class="fc" id="L229">            return &quot;detalle_receta&quot;;</span>
+
+<span class="fc" id="L231">        } catch (RestClientException e) {</span>
+<span class="fc" id="L232">            model.addAttribute(ERROR, &quot;No se pudo cargar la receta. Intente nuevamente más tarde.&quot;);</span>
+<span class="fc" id="L233">            return ERROR;</span>
+        }
+    }
+
+
+    @GetMapping(&quot;/buscar&quot;)
+    public String buscarRecetas(
+            @RequestParam(defaultValue = &quot;any&quot;) String nombre,
+            @RequestParam(defaultValue = &quot;any&quot;) String tipoCocina,
+            @RequestParam(defaultValue = &quot;any&quot;) String ingredientes,
+            @RequestParam(defaultValue = &quot;any&quot;) String paisOrigen,
+            @RequestParam(defaultValue = &quot;any&quot;) String dificultad,
+            Model model) {
+
+<span class="fc" id="L247">        backendUrl = String.format(&quot;%s/recetas/buscar/%s/%s/%s/%s/%s&quot;,</span>
+                backendMainUrl,
+<span class="fc" id="L249">                encodeParam(nombre),</span>
+<span class="fc" id="L250">                encodeParam(tipoCocina),</span>
+<span class="fc" id="L251">                encodeParam(ingredientes),</span>
+<span class="fc" id="L252">                encodeParam(paisOrigen),</span>
+<span class="fc" id="L253">                encodeParam(dificultad)</span>
+        );
+<span class="fc" id="L255">        log.info(&quot;Recetas buscar url: {}&quot;, backendUrl);</span>
+
+        try {
+<span class="fc" id="L258">            ResponseEntity&lt;List&lt;Receta&gt;&gt; response = restTemplate.exchange(</span>
+                    backendUrl,
+                    HttpMethod.GET,
+                    null,
+<span class="fc" id="L262">                    new ParameterizedTypeReference&lt;List&lt;Receta&gt;&gt;() {}</span>
+            );
+<span class="fc" id="L264">            log.info(&quot;Recetas buscar response: {}&quot;, response);</span>
+
+<span class="fc" id="L266">            model.addAttribute(&quot;recetas&quot;, response.getBody());</span>
+<span class="fc" id="L267">        } catch (RestClientException e) {</span>
+<span class="fc" id="L268">            model.addAttribute(&quot;recetas&quot;, Collections.emptyList());</span>
+<span class="fc" id="L269">            model.addAttribute(ERROR, &quot;No se pudieron cargar las recetas según los criterios de búsqueda.&quot;);</span>
+<span class="fc" id="L270">        }</span>
+
+<span class="fc" id="L272">        return &quot;buscar_recetas&quot;;</span>
+    }
+
+    @PostMapping(&quot;/recetas/nueva&quot;)
+    public String registrarNuevaReceta(@ModelAttribute Receta nuevaReceta, HttpSession session, Model model) {
+
+<span class="fc" id="L278">        Enumeration&lt;String&gt; attributeNames = session.getAttributeNames();</span>
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">        while (attributeNames.hasMoreElements()) {</span>
+<span class="nc" id="L280">            String attributeName = attributeNames.nextElement();</span>
+<span class="nc" id="L281">            Object attributeValue = session.getAttribute(attributeName);</span>
+<span class="nc" id="L282">            log.info(&quot;Atributo de sesión: {} = {}&quot;, attributeName, attributeValue);</span>
+<span class="nc" id="L283">        }</span>
+
+<span class="fc" id="L285">        log.info(&quot;session: {}&quot;, session);</span>
+<span class="fc" id="L286">        String token = (String) session.getAttribute(TOKEN);</span>
+<span class="fc" id="L287">        log.info(&quot;Recetas registrar token: {}&quot;, token);</span>
+
+<span class="pc bpc" id="L289" title="1 of 4 branches missed.">        if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L290">            return REDIRECT_LOGIN;</span>
+        }
+
+<span class="fc" id="L293">        String usuario = (String) session.getAttribute(USERNAME);</span>
+<span class="fc" id="L294">        log.info(&quot;Recetas registrar username: {}&quot;, usuario);</span>
+
+<span class="pc bpc" id="L296" title="1 of 4 branches missed.">        if (usuario == null || usuario.isEmpty()) {</span>
+<span class="fc" id="L297">            return REDIRECT_LOGIN;</span>
+        }
+
+<span class="fc" id="L300">        nuevaReceta.setIdUsuario((long) idUsuario);</span>
+
+<span class="fc" id="L302">        backendUrl = backendMainUrl + &quot;/recetas/register&quot;;</span>
+<span class="fc" id="L303">        log.info(&quot;Recetas registrar url: {}&quot;, backendUrl);</span>
+
+<span class="fc" id="L305">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L306">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+
+<span class="fc" id="L308">        HttpEntity&lt;Receta&gt; request = new HttpEntity&lt;&gt;(nuevaReceta, headers);</span>
+<span class="fc" id="L309">        log.info(&quot;Recetas registrar request: {}&quot;, request);</span>
+
+        try {
+<span class="fc" id="L312">            ResponseEntity&lt;Receta&gt; response = restTemplate.exchange(</span>
+                    backendUrl,
+                    HttpMethod.POST,
+                    request,
+                    Receta.class
+            );
+<span class="fc" id="L318">            log.info(&quot;Recetas registrar response: {}&quot;, response);</span>
+
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">            if (response.getStatusCode().is2xxSuccessful()) {</span>
+<span class="fc" id="L321">                return &quot;redirect:/inicio&quot;;</span>
+            }
+<span class="nc bnc" id="L323" title="All 4 branches missed.">            if (response.getStatusCode() == HttpStatus.UNAUTHORIZED || response.getStatusCode() == HttpStatus.FORBIDDEN) {</span>
+<span class="nc" id="L324">                return REDIRECT_LOGIN;</span>
+            }
+
+<span class="nc" id="L327">            model.addAttribute(ERROR, &quot;Error al registrar la receta. Respuesta del servidor: &quot; + response.getStatusCode());</span>
+<span class="nc" id="L328">            return CREAR_RECETA;</span>
+
+<span class="fc" id="L330">        } catch (HttpClientErrorException | HttpServerErrorException e) {</span>
+<span class="pc bpc" id="L331" title="3 of 4 branches missed.">            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {</span>
+<span class="fc" id="L332">                return REDIRECT_LOGIN;</span>
+            }
+<span class="nc" id="L334">            model.addAttribute(ERROR, &quot;Error al registrar la receta. Respuesta del servidor: &quot; + e.getStatusCode() + &quot; - &quot; + e.getResponseBodyAsString());</span>
+<span class="nc" id="L335">            return CREAR_RECETA;</span>
+<span class="fc" id="L336">        } catch (RestClientException e) {</span>
+<span class="fc" id="L337">            model.addAttribute(ERROR, &quot;Error de conexión. Intente nuevamente.&quot;);</span>
+<span class="fc" id="L338">            return CREAR_RECETA;</span>
+<span class="nc" id="L339">        } catch (Exception e) {</span>
+<span class="nc" id="L340">            model.addAttribute(ERROR, &quot;Ocurrió un error inesperado. Intente nuevamente.&quot;);</span>
+<span class="nc" id="L341">            return CREAR_RECETA;</span>
+        }
+    }
+
+    @GetMapping(&quot;/recetas/nueva&quot;)
+    public String mostrarFormularioCrearReceta(HttpSession session, Model model) {
+<span class="fc" id="L347">        String token = (String) session.getAttribute(TOKEN);</span>
+
+<span class="fc bfc" id="L349" title="All 4 branches covered.">        if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L350">            return REDIRECT_LOGIN;</span>
+        }
+<span class="fc" id="L352">        return CREAR_RECETA;</span>
+    }
+
+    @GetMapping(&quot;/comentarios&quot;)
+    public String mostrarComentarios(HttpSession session, Model model) {
+<span class="fc" id="L357">        String token = (String) session.getAttribute(TOKEN);</span>
+<span class="pc bpc" id="L358" title="1 of 4 branches missed.">        if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L359">            return REDIRECT_LOGIN;</span>
+        }
+
+<span class="fc" id="L362">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L363">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L364">        HttpEntity&lt;Void&gt; request = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L365">        log.info(&quot;Comentarios request: &quot; + request);</span>
+
+<span class="fc" id="L367">        backendUrl = backendMainUrl + &quot;/comentario/all&quot;;</span>
+<span class="fc" id="L368">        log.info(&quot;Comentarios ver url: &quot; + backendUrl);</span>
+
+        try {
+<span class="fc" id="L371">            ResponseEntity&lt;List&lt;Comentario&gt;&gt; response = restTemplate.exchange(</span>
+                    backendUrl,
+                    HttpMethod.GET,
+                    request,
+<span class="fc" id="L375">                    new ParameterizedTypeReference&lt;List&lt;Comentario&gt;&gt;() {}</span>
+            );
+<span class="fc" id="L377">            log.info(&quot;response: {}&quot;, response);</span>
+<span class="fc" id="L378">            model.addAttribute(&quot;comentarios&quot;, response.getBody());</span>
+<span class="fc" id="L379">        } catch (RestClientException e) {</span>
+<span class="fc" id="L380">            model.addAttribute(&quot;comentarios&quot;, Collections.emptyList());</span>
+<span class="fc" id="L381">            model.addAttribute(ERROR, &quot;No se pudieron cargar los comentarios. Intente nuevamente más tarde.&quot;);</span>
+<span class="fc" id="L382">        }</span>
+
+<span class="fc" id="L384">        String nombreUsuarioSession = (String) session.getAttribute(USERNAME);</span>
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">        boolean isAuthenticated = (nombreUsuarioSession != null);</span>
+
+<span class="fc" id="L387">        model.addAttribute(&quot;isAuthenticated&quot;, isAuthenticated);</span>
+<span class="fc" id="L388">        model.addAttribute(&quot;username&quot;, nombreUsuarioSession);</span>
+
+<span class="fc" id="L390">        return &quot;comentarios&quot;;</span>
+    }
+
+    @PostMapping(&quot;/comentarios/aprobar/{id}&quot;)
+    public String aprobarComentario(@PathVariable Long id, HttpSession session, Model model) {
+<span class="fc" id="L395">        log.info(&quot;id {}&quot;, id);</span>
+<span class="fc" id="L396">        log.info(&quot;session {}&quot;, session);</span>
+<span class="fc" id="L397">        log.info(&quot;model {}&quot;, model);</span>
+<span class="fc" id="L398">        String token = (String) session.getAttribute(TOKEN);</span>
+<span class="fc" id="L399">        log.info(&quot;token {}&quot;, token);</span>
+
+<span class="pc bpc" id="L401" title="1 of 4 branches missed.">        if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L402">            return REDIRECT_LOGIN;</span>
+        }
+
+<span class="fc" id="L405">        Boolean rol = (Boolean) session.getAttribute(&quot;rol&quot;);</span>
+<span class="fc" id="L406">        log.info(&quot;rol {}&quot;, rol);</span>
+<span class="pc bpc" id="L407" title="1 of 4 branches missed.">        if (rol == null || !rol) {</span>
+<span class="fc" id="L408">            model.addAttribute(ERROR, &quot;No tienes permisos para aprobar comentarios.&quot;);</span>
+<span class="fc" id="L409">            return &quot;redirect:/comentarios&quot;;</span>
+        }
+
+<span class="fc" id="L412">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L413">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L414">        log.info(&quot;headers {}&quot;, headers);</span>
+
+<span class="fc" id="L416">        HttpEntity&lt;Void&gt; request = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L417">        log.info(&quot;request {}&quot;, request);</span>
+
+<span class="fc" id="L419">        String backendUrl = backendMainUrl + &quot;/comentario/aprobar/&quot; + id;</span>
+<span class="fc" id="L420">        log.info(&quot;backendUrl {}&quot;, backendUrl);</span>
+
+        try {
+<span class="fc" id="L423">            ResponseEntity&lt;Void&gt; response = restTemplate.exchange(</span>
+                    backendUrl,
+                    HttpMethod.PUT,
+                    request,
+                    Void.class
+            );
+<span class="fc" id="L429">            log.info(&quot;response {}&quot;, response);</span>
+
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">            if (response.getStatusCode().is2xxSuccessful()) {</span>
+<span class="fc" id="L432">                log.info(&quot;Comentario aprobado con éxito, ID: {}&quot;, id);</span>
+            } else {
+<span class="nc" id="L434">                log.error(&quot;Error al aprobar el comentario, status: {}&quot;, response.getStatusCode());</span>
+            }
+<span class="fc" id="L436">        } catch (HttpClientErrorException e) {</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">            if (e.getStatusCode() == HttpStatus.FORBIDDEN) {</span>
+<span class="fc" id="L438">                log.error(&quot;Acceso prohibido al aprobar el comentario. Revisa los permisos del token o el rol del usuario.&quot;, e);</span>
+<span class="fc" id="L439">                model.addAttribute(ERROR, &quot;No tienes permisos para aprobar este comentario.&quot;);</span>
+            } else {
+<span class="nc" id="L441">                log.error(&quot;Error del cliente al aprobar el comentario, status: {}&quot;, e.getStatusCode(), e);</span>
+<span class="nc" id="L442">                model.addAttribute(ERROR, &quot;Ocurrió un error al intentar aprobar el comentario.&quot;);</span>
+            }
+<span class="fc" id="L444">        } catch (Exception e) {</span>
+<span class="fc" id="L445">            log.error(&quot;Error al aprobar el comentario, ID: {}&quot;, id, e);</span>
+<span class="fc" id="L446">            model.addAttribute(ERROR, &quot;Ocurrió un error inesperado. Intenta nuevamente.&quot;);</span>
+<span class="fc" id="L447">        }</span>
+
+<span class="fc" id="L449">        return &quot;redirect:/comentarios&quot;;</span>
+    }
+
+
+    private String encodeParam(String param) {
+<span class="fc" id="L454">        return param.replace(&quot; &quot;, &quot;%20&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
