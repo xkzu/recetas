@@ -1,6 +1,8 @@
 cl\duoc\app\recetas\controller\RecetaController.class
 cl\duoc\app\recetas\controller\RecetaController$3.class
 cl\duoc\app\recetas\config\RestTemplateConfig.class
+cl\duoc\app\recetas\util\JwtUtil.class
+cl\duoc\app\recetas\interceptor\JwtRequestInterceptor.class
 cl\duoc\app\recetas\model\Receta.class
 cl\duoc\app\recetas\controller\RecetaController$5.class
 cl\duoc\app\recetas\RecetasApplication.class
@@ -9,5 +11,6 @@ cl\duoc\app\recetas\model\Banner.class
 cl\duoc\app\recetas\config\UrlConfiguration.class
 cl\duoc\app\recetas\controller\RecetaController$2.class
 cl\duoc\app\recetas\config\SecurityConfig.class
+cl\duoc\app\recetas\config\JwtAuthenticationFilter.class
 cl\duoc\app\recetas\controller\RecetaController$1.class
 cl\duoc\app\recetas\controller\RecetaController$4.class

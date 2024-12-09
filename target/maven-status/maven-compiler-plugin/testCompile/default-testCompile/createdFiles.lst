@@ -1,1 +1,7 @@
 cl\duoc\app\recetas\RecetasApplicationTests.class
+cl\duoc\app\recetas\config\JwtAuthenticationFilterTest.class
+cl\duoc\app\recetas\util\JwtUtilTest.class
+cl\duoc\app\recetas\controller\RecetaControllerTest.class
+cl\duoc\app\recetas\interceptor\JwtRequestInterceptorTest.class
+cl\duoc\app\recetas\config\UrlConfigurationTest.class
+cl\duoc\app\recetas\config\RestTemplateConfigTest.class
