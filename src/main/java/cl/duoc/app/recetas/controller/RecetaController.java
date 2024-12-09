@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -28,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,6 +62,16 @@ public class RecetaController {
         this.frontendMainUrl = urlConfiguration.getFrontendUrl();
     }
 
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        // Invalida la sesión localmente
+        session.invalidate();
+        log.info("Sesión cerrada exitosamente");
+
+        // Redirigir al inicio después de cerrar sesión
+        return "redirect:/inicio";
+    }
+
     @GetMapping("/inicio")
     public String inicio(Model model, HttpSession session) {
         String backendPopularesUrl = backendMainUrl + "/recetas/populares/5";
@@ -80,7 +90,7 @@ public class RecetaController {
                     null,
                     new ParameterizedTypeReference<List<Receta>>() {}
             );
-            log.info("Recetas populares: {}", popularesResponse.getBody());
+            log.info("Recetas populares: {}", popularesResponse);
 
             ResponseEntity<List<Receta>> recientesResponse = restTemplate.exchange(
                     backendRecientesUrl,
@@ -88,7 +98,7 @@ public class RecetaController {
                     null,
                     new ParameterizedTypeReference<List<Receta>>() {}
             );
-            log.info("Recetas recientes: {}", recientesResponse.getBody());
+            log.info("Recetas recientes: {}", recientesResponse);
 
             ResponseEntity<List<Banner>> bannersResponse = restTemplate.exchange(
                     backendBannersUrl,
@@ -96,7 +106,7 @@ public class RecetaController {
                     null,
                     new ParameterizedTypeReference<List<Banner>>() {}
             );
-            log.info("Recetas banners: {}", bannersResponse.getBody());
+            log.info("Recetas banners: {}", bannersResponse);
 
             model.addAttribute("recetasPopulares", popularesResponse.getBody());
             model.addAttribute("recetasRecientes", recientesResponse.getBody());
@@ -126,7 +136,18 @@ public class RecetaController {
     }
 
     @PostMapping("/login")
-    public String loginPost(@RequestBody Map<String, String> credentials, Model model, HttpSession session) {
+    public String loginPost(
+            @RequestParam String username,
+            @RequestParam String password,
+            Model model,
+            HttpSession session) {
+
+        log.info("Recetas login username: {}", username);
+
+        // Construir las credenciales en un mapa
+        Map<String, String> credentials = new HashMap<>();
+        credentials.put("nombre", username);
+        credentials.put("password", password);
 
         String loginUrl = backendMainUrl + "/usuario/login";
         log.info("Recetas login url: {}", loginUrl);
@@ -134,6 +155,7 @@ public class RecetaController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, String>> request = new HttpEntity<>(credentials, headers);
+
         log.info("Recetas login request: {}", request);
 
         try {
@@ -143,8 +165,10 @@ public class RecetaController {
                     request,
                     Map.class
             );
+
             log.info("Recetas login response: {}", response);
 
+            // Extraer información del token y usuario
             String token = (String) response.getBody().get(TOKEN);
             Map<String, Object> usuario = (Map<String, Object>) response.getBody().get("usuario");
             idUsuario = (Integer) usuario.get("id");
@@ -153,6 +177,7 @@ public class RecetaController {
 
             log.info("Recetas login rol: {}", rol);
 
+            // Configurar sesión
             session.setAttribute(TOKEN, token);
             session.setAttribute(USERNAME, nombreUsuario);
             session.setAttribute("rol", rol);
@@ -166,6 +191,7 @@ public class RecetaController {
             return "login";
         }
     }
+
 
     @GetMapping("/receta/{id}")
     public String verReceta(@PathVariable Long id, Model model, HttpSession session) {
@@ -182,7 +208,7 @@ public class RecetaController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+
         HttpEntity<Void> request = new HttpEntity<>(headers);
         log.info("Recetas ver request: {}", request);
 
@@ -276,7 +302,6 @@ public class RecetaController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
 
         HttpEntity<Receta> request = new HttpEntity<>(nuevaReceta, headers);
         log.info("Recetas registrar request: {}", request);
@@ -318,7 +343,6 @@ public class RecetaController {
     @GetMapping("/recetas/nueva")
     public String mostrarFormularioCrearReceta(HttpSession session, Model model) {
         String token = (String) session.getAttribute(TOKEN);
-        log.info("Recetas mostrar token: {}", token);
 
         if (token == null || token.isEmpty()) {
             return REDIRECT_LOGIN;
@@ -335,8 +359,8 @@ public class RecetaController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
         HttpEntity<Void> request = new HttpEntity<>(headers);
+        log.info("Comentarios request: " + request);
 
         backendUrl = backendMainUrl + "/comentario/all";
         log.info("Comentarios ver url: " + backendUrl);
@@ -348,6 +372,7 @@ public class RecetaController {
                     request,
                     new ParameterizedTypeReference<List<Comentario>>() {}
             );
+            log.info("response: {}", response);
             model.addAttribute("comentarios", response.getBody());
         } catch (RestClientException e) {
             model.addAttribute("comentarios", Collections.emptyList());
@@ -365,13 +390,18 @@ public class RecetaController {
 
     @PostMapping("/comentarios/aprobar/{id}")
     public String aprobarComentario(@PathVariable Long id, HttpSession session, Model model) {
+        log.info("id {}", id);
+        log.info("session {}", session);
+        log.info("model {}", model);
         String token = (String) session.getAttribute(TOKEN);
+        log.info("token {}", token);
 
         if (token == null || token.isEmpty()) {
             return REDIRECT_LOGIN;
         }
 
         Boolean rol = (Boolean) session.getAttribute("rol");
+        log.info("rol {}", rol);
         if (rol == null || !rol) {
             model.addAttribute(ERROR, "No tienes permisos para aprobar comentarios.");
             return "redirect:/comentarios";
@@ -379,10 +409,13 @@ public class RecetaController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        log.info("headers {}", headers);
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
-        String backendUrl = backendMainUrl + "/comentarios/aprobar/" + id;
+        log.info("request {}", request);
+
+        String backendUrl = backendMainUrl + "/comentario/aprobar/" + id;
+        log.info("backendUrl {}", backendUrl);
 
         try {
             ResponseEntity<Void> response = restTemplate.exchange(
@@ -391,6 +424,7 @@ public class RecetaController {
                     request,
                     Void.class
             );
+            log.info("response {}", response);
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("Comentario aprobado con éxito, ID: {}", id);
